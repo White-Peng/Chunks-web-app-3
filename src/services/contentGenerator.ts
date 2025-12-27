@@ -27,6 +27,16 @@ async function getImageForKeywords(keywords: string): Promise<string> {
 }
 
 /**
+ * Progress callback for tracking generation status
+ */
+export type GenerationProgressCallback = (progress: {
+  phase: 'stories' | 'chunks';
+  current: number;
+  total: number;
+  storyTitle?: string;
+}) => void;
+
+/**
  * Generate Stories from browsing history URLs using Deepseek LLM
  */
 export async function generateStoriesFromHistory(urls: string[]): Promise<Story[]> {
@@ -64,6 +74,118 @@ export async function generateStoriesFromHistory(urls: string[]): Promise<Story[
     return storiesWithImages;
   } catch (error) {
     console.error('Error generating stories:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generate Stories with pre-generated Chunks for instant loading
+ * This eliminates the delay when users swipe into a story
+ */
+export async function generateStoriesWithChunks(
+  urls: string[],
+  onProgress?: GenerationProgressCallback
+): Promise<Story[]> {
+  const llm = new LLMService();
+  
+  try {
+    // Phase 1: Generate Stories
+    onProgress?.({ phase: 'stories', current: 0, total: 1 });
+    
+    const response = await llm.generateStories(urls);
+    const parsed = parseJSON<Array<{
+      id: number;
+      title: string;
+      description: string;
+      imageKeywords?: string;
+      image?: string;
+      relatedUrls?: string[];
+    }>>(response);
+    
+    onProgress?.({ phase: 'stories', current: 1, total: 1 });
+    
+    // Phase 2: Generate Chunks for each Story (in parallel for speed)
+    const totalStories = parsed.length;
+    let completedStories = 0;
+    
+    const storiesWithChunks = await Promise.all(
+      parsed.map(async (item) => {
+        // Get story image
+        const storyKeywords = item.imageKeywords || item.image || item.title;
+        const storyImage = await getImageForKeywords(storyKeywords);
+        
+        const story: Story = {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          image: storyImage,
+          imageKeywords: storyKeywords,
+          relatedUrls: item.relatedUrls || [],
+          createdAt: new Date(),
+        };
+        
+        // Generate chunks for this story
+        onProgress?.({ 
+          phase: 'chunks', 
+          current: completedStories, 
+          total: totalStories,
+          storyTitle: item.title
+        });
+        
+        try {
+          const chunksResponse = await llm.generateChunks(
+            story.title,
+            story.description,
+            story.relatedUrls || [],
+            story.imageKeywords
+          );
+          
+          const chunksParsed = parseJSON<Array<{
+            id: number;
+            title: string;
+            content: string;
+            imageKeywords?: string;
+            image?: string;
+          }>>(chunksResponse);
+          
+          // Get images for chunks
+          const chunksWithImages = await Promise.all(
+            chunksParsed.map(async (chunk) => {
+              const chunkKeywords = chunk.imageKeywords || chunk.image || storyKeywords;
+              const chunkImage = await getImageForKeywords(chunkKeywords);
+              
+              return {
+                id: chunk.id,
+                title: chunk.title,
+                content: chunk.content,
+                image: chunkImage,
+                imageKeywords: chunkKeywords,
+              };
+            })
+          );
+          
+          story.chunks = chunksWithImages;
+        } catch (error) {
+          console.error(`Error generating chunks for story "${story.title}":`, error);
+          // Use mock chunks as fallback
+          story.chunks = generateMockChunks(story);
+        }
+        
+        completedStories++;
+        onProgress?.({ 
+          phase: 'chunks', 
+          current: completedStories, 
+          total: totalStories,
+          storyTitle: item.title
+        });
+        
+        return story;
+      })
+    );
+    
+    return storiesWithChunks;
+  } catch (error) {
+    console.error('Error generating stories with chunks:', error);
     throw error;
   }
 }

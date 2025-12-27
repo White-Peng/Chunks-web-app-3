@@ -7,6 +7,11 @@ import { generateChunksFromStory, generateMockChunks } from '@/services/contentG
 import type { Story } from '@/types';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
+// Check if story has pre-generated chunks
+function hasPreGeneratedChunks(story: Story): boolean {
+  return Array.isArray(story.chunks) && story.chunks.length > 0;
+}
+
 // Single Story Card Component
 function StoryCard({ story, style }: { story: Story; style?: React.CSSProperties }) {
   return (
@@ -127,11 +132,20 @@ export function StoriesPage() {
 
   const navigateToChunks = async () => {
     const currentStory = stories[currentIndex];
+    
+    // Use pre-generated chunks if available (instant navigation!)
+    if (hasPreGeneratedChunks(currentStory)) {
+      storageService.setCurrentStory(currentStory);
+      storageService.setCurrentChunks(currentStory.chunks!);
+      navigate('/chunks');
+      return;
+    }
+    
+    // Fallback: Generate chunks on-demand (for legacy stories without pre-generated chunks)
     setIsGeneratingChunks(true);
     setError('');
 
     try {
-      // Try to generate chunks with LLM, fallback to mock
       let chunks;
       try {
         chunks = await generateChunksFromStory(currentStory);

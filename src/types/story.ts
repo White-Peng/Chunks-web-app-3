@@ -1,3 +1,5 @@
+import type { Chunk } from './chunk';
+
 export interface Story {
   id: number;
   title: string;
@@ -5,6 +7,7 @@ export interface Story {
   image: string;
   imageKeywords?: string; // Keywords for Unsplash image search
   relatedUrls?: string[];
+  chunks?: Chunk[]; // Pre-generated chunks for instant loading
   createdAt?: Date;
 }
 

@@ -4,13 +4,20 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Plus, Link, Trash2, Upload, FileText, Filter, X, AlertTriangle } from 'lucide-react';
 import { storageService } from '@/services/storageService';
 import { blacklistService } from '@/services/blacklist';
-import { generateStoriesFromHistory } from '@/services/contentGenerator';
+import { generateStoriesWithChunks } from '@/services/contentGenerator';
 import { readJsonlFile } from '@/utils/jsonlParser';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 interface FilteredResult {
   accepted: string[];
   rejected: string[];
+}
+
+interface GenerationProgress {
+  phase: 'stories' | 'chunks';
+  current: number;
+  total: number;
+  storyTitle?: string;
 }
 
 export function AddHistoryPage() {
@@ -20,6 +27,7 @@ export function AddHistoryPage() {
   const [urlInput, setUrlInput] = useState('');
   const [urls, setUrls] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
   const [error, setError] = useState('');
   const [showFilterInfo, setShowFilterInfo] = useState(false);
   const [lastFilterResult, setLastFilterResult] = useState<FilteredResult | null>(null);
@@ -143,7 +151,7 @@ export function AddHistoryPage() {
     setImportStats(null);
   };
 
-  // Generate Stories from URLs
+  // Generate Stories with pre-loaded Chunks
   const handleGenerateStories = async () => {
     if (urls.length === 0) {
       setError('Please add some URLs first');
@@ -151,10 +159,13 @@ export function AddHistoryPage() {
     }
 
     setIsGenerating(true);
+    setGenerationProgress(null);
     setError('');
 
     try {
-      const stories = await generateStoriesFromHistory(urls);
+      const stories = await generateStoriesWithChunks(urls, (progress) => {
+        setGenerationProgress(progress);
+      });
       storageService.setStories(stories);
       storageService.setHasStarted(true);
       navigate('/stories');
@@ -163,6 +174,7 @@ export function AddHistoryPage() {
       setError(err instanceof Error ? err.message : 'Failed to generate stories');
     } finally {
       setIsGenerating(false);
+      setGenerationProgress(null);
     }
   };
 
@@ -355,7 +367,7 @@ export function AddHistoryPage() {
         </section>
 
         {/* Generate Stories Button */}
-        <section>
+        <section className="space-y-3">
           <button
             onClick={handleGenerateStories}
             disabled={isGenerating || urls.length === 0}
@@ -364,12 +376,48 @@ export function AddHistoryPage() {
             {isGenerating ? (
               <>
                 <LoadingSpinner size="sm" />
-                <span>Generating Stories...</span>
+                <span>
+                  {generationProgress?.phase === 'stories' 
+                    ? 'Analyzing URLs...' 
+                    : generationProgress?.phase === 'chunks'
+                      ? `Generating Chunks (${generationProgress.current}/${generationProgress.total})...`
+                      : 'Generating...'}
+                </span>
               </>
             ) : (
               'Generate Stories'
             )}
           </button>
+          
+          {/* Progress Details */}
+          <AnimatePresence>
+            {isGenerating && generationProgress && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-center"
+              >
+                <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500"
+                    initial={{ width: 0 }}
+                    animate={{ 
+                      width: generationProgress.phase === 'stories' 
+                        ? '20%' 
+                        : `${20 + (generationProgress.current / generationProgress.total) * 80}%` 
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                {generationProgress.storyTitle && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Creating chunks for "{generationProgress.storyTitle}"
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         {/* Blacklist Info */}
