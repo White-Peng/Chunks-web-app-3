@@ -32,7 +32,6 @@ export function ChatbotPage() {
       setTimeout(() => {
         setShowMotivation(false);
         
-        // After motivation fades, send bot's first message
         setTimeout(() => {
           setMessages([{
             id: 1,
@@ -88,24 +87,14 @@ export function ChatbotPage() {
     setIsTyping(true);
 
     try {
-      const config = storageService.getApiConfig();
-      
-      let responseText: string;
-      
-      if (config) {
-        // Use LLM for response
-        responseText = await generateChatResponse(
-          input,
-          story.title,
-          story.description,
-          chunks,
-          messages.map(m => ({ text: m.text, sender: m.sender })),
-          config
-        );
-      } else {
-        // Fallback to simple response
-        responseText = generateFallbackResponse(input, story.title);
-      }
+      // Use LLM for response
+      const responseText = await generateChatResponse(
+        input,
+        story.title,
+        story.description,
+        chunks,
+        messages.map(m => ({ text: m.text, sender: m.sender }))
+      );
 
       const botResponse: Message = {
         id: messages.length + 2,
@@ -117,13 +106,15 @@ export function ChatbotPage() {
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error('Chat error:', error);
-      const errorMessage: Message = {
+      // Fallback response
+      const fallbackText = generateFallbackResponse(input, story.title);
+      const botResponse: Message = {
         id: messages.length + 2,
-        text: 'Sorry, I had trouble generating a response. Please try again.',
+        text: fallbackText,
         sender: 'bot',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, botResponse]);
     } finally {
       setIsTyping(false);
     }
@@ -134,22 +125,18 @@ export function ChatbotPage() {
     const lowerMessage = userMessage.toLowerCase();
     
     if (lowerMessage.includes('summary') || lowerMessage.includes('summarize')) {
-      return `Great question! The key takeaway from "${storyTitle}" is understanding how different perspectives shape our view of this topic. The chunks you read covered various aspects from historical context to future trends.`;
+      return `Great question! The key takeaway from "${storyTitle}" is understanding how different perspectives shape our view of this topic.`;
     }
     
     if (lowerMessage.includes('why') || lowerMessage.includes('reason')) {
-      return `That's an insightful question! This topic is important because it impacts how we think about and approach related concepts. Each chunk revealed different layers of understanding.`;
+      return `That's an insightful question! This topic is important because it impacts how we think about and approach related concepts.`;
     }
     
     if (lowerMessage.includes('how') || lowerMessage.includes('what')) {
-      return `Excellent question! Based on the chunks you've read, there are multiple approaches to this. The real-world applications we covered show practical ways this manifests in everyday life.`;
-    }
-    
-    if (lowerMessage.includes('example')) {
-      return `From what you've learned, you can apply these insights in various scenarios. The expert perspectives shared some compelling examples of implementation.`;
+      return `Excellent question! Based on the chunks you've read, there are multiple approaches to this.`;
     }
 
-    return `That's a thought-provoking question about "${storyTitle}". Based on the chunks you've read, this connects to the broader themes of understanding context, expert insights, and real-world applications. What specific aspect interests you most?`;
+    return `That's a thought-provoking question about "${storyTitle}". What specific aspect interests you most?`;
   };
 
   // Handle key press
@@ -232,7 +219,7 @@ export function ChatbotPage() {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.sender === 'user'
-                  ? 'bg-purple-500 text-white'
+                  ? 'bg-black text-white'
                   : 'bg-white text-gray-900 border border-gray-200'
               }`}
             >
@@ -281,7 +268,7 @@ export function ChatbotPage() {
             <button
               onClick={() => setShowReferences(!showReferences)}
               className={`p-2 rounded-full transition-colors ${
-                showReferences ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100 text-gray-600'
+                showReferences ? 'bg-gray-100 text-gray-900' : 'hover:bg-gray-100 text-gray-600'
               }`}
             >
               <BookOpen className="w-5 h-5" />
@@ -308,7 +295,7 @@ export function ChatbotPage() {
                       href={ref.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors"
+                      className="block p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
                     >
                       <p className="text-sm text-gray-900 truncate">{ref.title}</p>
                       <p className="text-xs text-gray-500 mt-1">{ref.source}</p>
@@ -329,12 +316,12 @@ export function ChatbotPage() {
             onKeyPress={handleKeyPress}
             placeholder="Ask a question..."
             disabled={isTyping}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-black transition-colors disabled:opacity-50"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="p-3 bg-purple-500 text-white rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:hover:bg-purple-500 transition-colors"
+            className="p-3 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-black transition-colors"
           >
             {isTyping ? (
               <LoadingSpinner size="sm" />
@@ -347,4 +334,3 @@ export function ChatbotPage() {
     </div>
   );
 }
-

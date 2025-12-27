@@ -1,19 +1,17 @@
-import type { Story, Chunk, LLMConfig } from '@/types';
+import type { Story, Chunk } from '@/types';
 import { LLMService } from './llm';
 
 // Unsplash image URL helper
 function getUnsplashImage(keyword: string, index: number = 0): string {
-  // Using Unsplash source for random images based on keyword
   const seed = `${keyword}-${index}`;
   return `https://source.unsplash.com/800x600/?${encodeURIComponent(keyword)}&sig=${seed}`;
 }
 
 // Parse JSON from LLM response (handles markdown code blocks)
 function parseJSON<T>(response: string): T {
-  // Remove markdown code blocks if present
   let cleaned = response.trim();
   
-  // Remove ```json ... ``` or ``` ... ```
+  // Remove markdown code blocks if present
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   }
@@ -22,13 +20,10 @@ function parseJSON<T>(response: string): T {
 }
 
 /**
- * Generate Stories from browsing history URLs using LLM
+ * Generate Stories from browsing history URLs using Deepseek LLM
  */
-export async function generateStoriesFromHistory(
-  urls: string[],
-  config: LLMConfig
-): Promise<Story[]> {
-  const llm = new LLMService(config);
+export async function generateStoriesFromHistory(urls: string[]): Promise<Story[]> {
+  const llm = new LLMService();
   
   try {
     const response = await llm.generateStories(urls);
@@ -56,13 +51,10 @@ export async function generateStoriesFromHistory(
 }
 
 /**
- * Generate Chunks from a Story using LLM
+ * Generate Chunks from a Story using Deepseek LLM
  */
-export async function generateChunksFromStory(
-  story: Story,
-  config: LLMConfig
-): Promise<Chunk[]> {
-  const llm = new LLMService(config);
+export async function generateChunksFromStory(story: Story): Promise<Chunk[]> {
+  const llm = new LLMService();
   
   try {
     const response = await llm.generateChunks(
@@ -92,17 +84,16 @@ export async function generateChunksFromStory(
 }
 
 /**
- * Generate a chat response using LLM
+ * Generate a chat response using Deepseek LLM
  */
 export async function generateChatResponse(
   userMessage: string,
   storyTitle: string,
   storyDescription: string,
   chunks: Chunk[],
-  previousMessages: Array<{ text: string; sender: 'user' | 'bot' }>,
-  config: LLMConfig
+  previousMessages: Array<{ text: string; sender: 'user' | 'bot' }>
 ): Promise<string> {
-  const llm = new LLMService(config);
+  const llm = new LLMService();
   
   try {
     const response = await llm.chat(userMessage, {
@@ -131,8 +122,8 @@ export function generateMockStories(): Story[] {
   return [
     {
       id: 1,
-      title: 'AI Revolution',
-      description: 'The latest developments in artificial intelligence and machine learning',
+      title: 'The Future of AI',
+      description: 'Explore the cutting-edge developments in artificial intelligence',
       image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
       relatedUrls: ['https://openai.com', 'https://anthropic.com'],
       createdAt: new Date(),
@@ -140,7 +131,7 @@ export function generateMockStories(): Story[] {
     {
       id: 2,
       title: 'Web Development Trends',
-      description: 'Modern frameworks and tools shaping the future of web development',
+      description: 'Modern frameworks and tools shaping the future of web',
       image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800',
       relatedUrls: ['https://react.dev', 'https://vitejs.dev'],
       createdAt: new Date(),
@@ -148,7 +139,7 @@ export function generateMockStories(): Story[] {
     {
       id: 3,
       title: 'Design Systems',
-      description: 'Building consistent and scalable design systems for better UX',
+      description: 'Building consistent and scalable design systems',
       image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800',
       relatedUrls: ['https://tailwindcss.com', 'https://ui.shadcn.com'],
       createdAt: new Date(),
@@ -193,4 +184,3 @@ export function generateMockChunks(story: Story): Chunk[] {
     },
   ];
 }
-

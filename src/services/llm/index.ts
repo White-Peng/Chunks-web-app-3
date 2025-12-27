@@ -1,20 +1,14 @@
-import type { LLMConfig, ChatContext } from '@/types';
-import { sendToOpenAI } from './openai';
-import { sendToAnthropic } from './anthropic';
-import { sendToGemini } from './gemini';
+import type { ChatContext } from '@/types';
+import { sendToDeepseek } from './deepseek';
 
 export class LLMService {
-  private config: LLMConfig;
-
-  constructor(config: LLMConfig) {
-    this.config = config;
-  }
-
   /**
    * Generate Stories from browsing history URLs
    */
   async generateStories(urls: string[]): Promise<string> {
-    const prompt = `You are a content curator. Based on the following browsing history URLs, group them into 3-5 thematic stories that represent the user's interests.
+    const systemPrompt = `You are a content curator. Based on browsing history URLs, group them into 3-5 thematic stories that represent the user's interests.`;
+    
+    const userPrompt = `Based on the following browsing history URLs, group them into 3-5 thematic stories.
 
 For each story, provide:
 - id: A unique number (1, 2, 3, etc.)
@@ -29,14 +23,19 @@ ${urls.map((url, i) => `${i + 1}. ${url}`).join('\n')}
 IMPORTANT: Respond ONLY with valid JSON array, no markdown formatting, no code blocks. Example:
 [{"id":1,"title":"Tech Innovations","description":"Latest in technology","image":"technology","relatedUrls":["url1","url2"]}]`;
 
-    return this.sendMessage(prompt);
+    return sendToDeepseek([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ]);
   }
 
   /**
    * Generate Chunks from a Story
    */
   async generateChunks(storyTitle: string, storyDescription: string, relatedUrls: string[]): Promise<string> {
-    const prompt = `You are an educational content creator. Create 5 engaging "chunks" (bite-sized knowledge cards) for the following topic:
+    const systemPrompt = `You are an educational content creator. Create engaging, bite-sized knowledge cards.`;
+    
+    const userPrompt = `Create 5 engaging "chunks" (bite-sized knowledge cards) for the following topic:
 
 Topic: ${storyTitle}
 Description: ${storyDescription}
@@ -58,7 +57,10 @@ The chunks should follow this progression:
 IMPORTANT: Respond ONLY with valid JSON array, no markdown formatting, no code blocks. Example:
 [{"id":1,"title":"Key Insight","content":"The fundamental concept...","image":"technology"}]`;
 
-    return this.sendMessage(prompt);
+    return sendToDeepseek([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ]);
   }
 
   /**
@@ -84,51 +86,15 @@ Keep responses concise and engaging (max 150 words). Be conversational and suppo
       .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
       .join('\n');
 
-    const fullPrompt = conversationHistory 
-      ? `${systemPrompt}\n\nPrevious conversation:\n${conversationHistory}\n\nUser: ${userMessage}\n\nAssistant:`
-      : `${systemPrompt}\n\nUser: ${userMessage}\n\nAssistant:`;
+    const userPrompt = conversationHistory 
+      ? `Previous conversation:\n${conversationHistory}\n\nUser: ${userMessage}`
+      : userMessage;
 
-    return this.sendMessage(fullPrompt, systemPrompt);
-  }
-
-  /**
-   * Send a message to the configured LLM provider
-   */
-  private async sendMessage(prompt: string, systemPrompt?: string): Promise<string> {
-    const { provider } = this.config;
-
-    switch (provider) {
-      case 'openai':
-        return sendToOpenAI(
-          systemPrompt 
-            ? [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: prompt },
-              ]
-            : [{ role: 'user', content: prompt }],
-          this.config
-        );
-
-      case 'anthropic':
-        return sendToAnthropic(
-          systemPrompt || 'You are a helpful assistant.',
-          [{ role: 'user', content: prompt }],
-          this.config
-        );
-
-      case 'gemini':
-        return sendToGemini(
-          systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
-          this.config
-        );
-
-      default:
-        throw new Error(`Unknown provider: ${provider}`);
-    }
+    return sendToDeepseek([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ]);
   }
 }
 
-export { sendToOpenAI } from './openai';
-export { sendToAnthropic } from './anthropic';
-export { sendToGemini } from './gemini';
-
+export { sendToDeepseek } from './deepseek';

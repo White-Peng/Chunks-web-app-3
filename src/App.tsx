@@ -2,7 +2,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react';
 import { 
   WelcomePage, 
-  SettingsPage, 
+  AddHistoryPage,
   StoriesPage, 
   ChunksPage, 
   ChatbotPage 
@@ -25,8 +25,8 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin" />
       </div>
     );
   }
@@ -47,8 +47,8 @@ export default function App() {
             } 
           />
           
-          {/* Settings */}
-          <Route path="/settings" element={<SettingsPage />} />
+          {/* Add History */}
+          <Route path="/add-history" element={<AddHistoryPage />} />
           
           {/* Stories */}
           <Route path="/stories" element={<StoriesPage />} />
