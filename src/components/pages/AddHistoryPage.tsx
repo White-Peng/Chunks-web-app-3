@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Plus, Link, Trash2, Upload, FileText, Filter, X, AlertTriangle } from 'lucide-react';
 import { storageService } from '@/services/storageService';
 import { blacklistService } from '@/services/blacklist';
-import { generateStoriesFromHistory, generateMockStories } from '@/services/contentGenerator';
+import { generateStoriesFromHistory } from '@/services/contentGenerator';
 import { readJsonlFile } from '@/utils/jsonlParser';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
@@ -164,14 +164,6 @@ export function AddHistoryPage() {
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // Use Demo Mode (mock data)
-  const handleDemoMode = () => {
-    const mockStories = generateMockStories();
-    storageService.setStories(mockStories);
-    storageService.setHasStarted(true);
-    navigate('/stories');
   };
 
   return (
@@ -363,7 +355,7 @@ export function AddHistoryPage() {
         </section>
 
         {/* Generate Stories Button */}
-        <section className="space-y-3">
+        <section>
           <button
             onClick={handleGenerateStories}
             disabled={isGenerating || urls.length === 0}
@@ -377,15 +369,6 @@ export function AddHistoryPage() {
             ) : (
               'Generate Stories'
             )}
-          </button>
-
-          <div className="text-center text-gray-400 text-sm">or</div>
-
-          <button
-            onClick={handleDemoMode}
-            className="w-full py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
-          >
-            Try Demo Mode
           </button>
         </section>
 

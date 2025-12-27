@@ -146,42 +146,7 @@ export async function generateChatResponse(
 }
 
 /**
- * Generate mock stories for demo/development
- */
-export function generateMockStories(): Story[] {
-  return [
-    {
-      id: 1,
-      title: 'The Future of AI',
-      description: 'Explore the cutting-edge developments in artificial intelligence',
-      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
-      imageKeywords: 'artificial intelligence robot futuristic',
-      relatedUrls: ['https://openai.com', 'https://anthropic.com'],
-      createdAt: new Date(),
-    },
-    {
-      id: 2,
-      title: 'Web Development Trends',
-      description: 'Modern frameworks and tools shaping the future of web',
-      image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800',
-      imageKeywords: 'coding programming web development',
-      relatedUrls: ['https://react.dev', 'https://vitejs.dev'],
-      createdAt: new Date(),
-    },
-    {
-      id: 3,
-      title: 'Design Systems',
-      description: 'Building consistent and scalable design systems',
-      image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800',
-      imageKeywords: 'design ui ux interface',
-      relatedUrls: ['https://tailwindcss.com', 'https://ui.shadcn.com'],
-      createdAt: new Date(),
-    },
-  ];
-}
-
-/**
- * Generate mock chunks for demo/development (with unique images)
+ * Generate mock chunks as fallback when LLM fails
  */
 export function generateMockChunks(story: Story): Chunk[] {
   const chunkKeywords = [
