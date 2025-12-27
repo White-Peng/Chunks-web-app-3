@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, Send, BookOpen, ArrowLeft } from 'lucide-react';
+import { Home, Send, BookOpen } from 'lucide-react';
 import { storageService } from '@/services/storageService';
 import { generateChatResponse } from '@/services/contentGenerator';
 import type { Story, Chunk, Message, Reference } from '@/types';
@@ -161,16 +161,11 @@ export function ChatbotPage() {
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-4 bg-white border-b">
         <button 
           onClick={() => navigate('/chunks')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="hover:opacity-70 transition-opacity text-gray-900"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm">Chunks</span>
+          Chunks
         </button>
-        <div className="flex-1 text-center">
-          <h1 className="text-sm font-medium text-gray-900 truncate px-4">
-            {story?.title || 'Reflection'}
-          </h1>
-        </div>
+        <div className="flex-1"></div>
         <button 
           onClick={handleFinish}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -219,7 +214,7 @@ export function ChatbotPage() {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.sender === 'user'
-                  ? 'bg-black text-white'
+                  ? 'bg-purple-500 text-white'
                   : 'bg-white text-gray-900 border border-gray-200'
               }`}
             >
@@ -316,12 +311,12 @@ export function ChatbotPage() {
             onKeyPress={handleKeyPress}
             placeholder="Ask a question..."
             disabled={isTyping}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="p-3 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-black transition-colors"
+            className="p-3 bg-purple-500 text-white rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:hover:bg-purple-500 transition-colors"
           >
             {isTyping ? (
               <LoadingSpinner size="sm" />

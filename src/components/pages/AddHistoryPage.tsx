@@ -270,7 +270,7 @@ export function AddHistoryPage() {
             <div className="flex gap-2 mt-2">
               <button
                 onClick={handleAddUrl}
-                className="flex-1 py-3 bg-black text-white rounded-full font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+                className="flex-1 py-3 bg-purple-500 text-white rounded-full font-medium flex items-center justify-center gap-2 hover:bg-purple-600 transition-colors"
               >
                 <Plus className="w-5 h-5" />
                 Add URLs
