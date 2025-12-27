@@ -3,5 +3,6 @@ export interface Chunk {
   title: string;
   content: string;
   image: string;
+  imageKeywords?: string; // Keywords for Unsplash image search
 }
 

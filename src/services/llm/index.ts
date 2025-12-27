@@ -14,14 +14,18 @@ For each story, provide:
 - id: A unique number (1, 2, 3, etc.)
 - title: A catchy, engaging title (max 50 characters)
 - description: Brief description of the theme (max 100 characters)
-- image: A relevant Unsplash search term for finding an image (e.g., "technology", "nature", "cooking")
+- imageKeywords: 2-4 specific English keywords for Unsplash image search that visually represent this story. Be specific and descriptive. Examples:
+  - For AI topic: "futuristic robot artificial intelligence"
+  - For cooking: "gourmet food kitchen preparation"
+  - For travel: "scenic mountain landscape adventure"
+  - For tech startup: "modern office technology workspace"
 - relatedUrls: Array of URLs from the input that belong to this theme
 
 URLs to analyze:
 ${urls.map((url, i) => `${i + 1}. ${url}`).join('\n')}
 
 IMPORTANT: Respond ONLY with valid JSON array, no markdown formatting, no code blocks. Example:
-[{"id":1,"title":"Tech Innovations","description":"Latest in technology","image":"technology","relatedUrls":["url1","url2"]}]`;
+[{"id":1,"title":"Tech Innovations","description":"Latest in technology","imageKeywords":"futuristic technology innovation circuit","relatedUrls":["url1","url2"]}]`;
 
     return sendToDeepseek([
       { role: 'system', content: systemPrompt },
@@ -32,7 +36,7 @@ IMPORTANT: Respond ONLY with valid JSON array, no markdown formatting, no code b
   /**
    * Generate Chunks from a Story
    */
-  async generateChunks(storyTitle: string, storyDescription: string, relatedUrls: string[]): Promise<string> {
+  async generateChunks(storyTitle: string, storyDescription: string, relatedUrls: string[], _storyImageKeywords?: string): Promise<string> {
     const systemPrompt = `You are an educational content creator. Create engaging, bite-sized knowledge cards.`;
     
     const userPrompt = `Create 5 engaging "chunks" (bite-sized knowledge cards) for the following topic:
@@ -45,7 +49,12 @@ Each chunk should be educational and provide unique insights. Create exactly 5 c
 - id: Number from 1 to 5
 - title: Short, catchy title (max 30 characters)
 - content: Educational content that teaches something valuable (100-150 characters)
-- image: Keep the same image keyword as the story
+- imageKeywords: 2-4 specific English keywords for Unsplash image search that visually represent THIS SPECIFIC chunk's content. Each chunk should have UNIQUE keywords that match its specific topic. Be creative and specific:
+  - For a core concept chunk: focus on abstract visual metaphors
+  - For historical context: vintage, historical imagery
+  - For expert insight: professional, academic imagery
+  - For real-world application: practical, everyday imagery
+  - For deep dive: detailed, close-up, technical imagery
 
 The chunks should follow this progression:
 1. Core Concept - Introduce the fundamental idea
@@ -55,7 +64,7 @@ The chunks should follow this progression:
 5. Deep Dive - Advanced or fascinating aspect
 
 IMPORTANT: Respond ONLY with valid JSON array, no markdown formatting, no code blocks. Example:
-[{"id":1,"title":"Key Insight","content":"The fundamental concept...","image":"technology"}]`;
+[{"id":1,"title":"Key Insight","content":"The fundamental concept...","imageKeywords":"abstract concept light bulb idea"}]`;
 
     return sendToDeepseek([
       { role: 'system', content: systemPrompt },
